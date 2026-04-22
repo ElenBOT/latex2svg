@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const blob = new Blob([svgString], {type: "image/svg+xml;charset=utf-8"});
         const url = URL.createObjectURL(blob);
-        triggerDownload(url, 'formula.svg');
+        triggerDownload(url, 'expression.svg');
     }
 
     function createSvgCanvas(container, callback) {
@@ -241,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleDownloadImage(container) {
         createSvgCanvas(container, (canvas) => {
             const imgURL = canvas.toDataURL("image/png");
-            triggerDownload(imgURL, 'formula.png');
+            triggerDownload(imgURL, 'expression.png');
         });
     }
 
@@ -277,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 width: width,
                 height: height
             });
-            pdf.save('formula.pdf');
+            pdf.save('expression.pdf');
         } catch (err) {
             console.error('Error generating PDF:', err);
             alert('Failed to generate vector PDF: ' + err.message);
