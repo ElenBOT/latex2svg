@@ -126,39 +126,40 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!svg) return null;
 
         const clone = svg.cloneNode(true);
-        
-        // Apply export settings
         const exportColor = exportColorInput.value;
         const exportSize = parseInt(exportSizeInput.value) || 32;
         
-        clone.setAttribute('fill', exportColor);
-        clone.style.color = exportColor;
-        clone.style.fill = exportColor;
+        // 1. Calculate exact pixel dimensions by rendering it temporarily
+        const tempDiv = document.createElement('div');
+        tempDiv.style.fontSize = `${exportSize}px`;
+        // MathJax uses ex units relative to font-size. 
+        // We append the clone to measure how the browser resolves its width/height.
+        tempDiv.appendChild(clone.cloneNode(true));
+        document.body.appendChild(tempDiv);
+        const tempSvg = tempDiv.querySelector('svg');
+        const rect = tempSvg.getBoundingClientRect();
+        document.body.removeChild(tempDiv);
+
+        // 2. Set precise width and height in px (with 3 decimal places)
+        clone.setAttribute('width', `${rect.width.toFixed(3)}px`);
+        clone.setAttribute('height', `${rect.height.toFixed(3)}px`);
+        
+        // 3. Clean up the style and attributes to match a standard standalone SVG
         clone.removeAttribute('focusable');
-
-        // To get exact pixel dimensions, we can parse the ex width/height
-        // 1 ex is roughly 0.5 em. Since we are using exportSize as the target em,
-        // 1 ex = exportSize / 2
-        const exToPx = exportSize / 2;
+        clone.setAttribute('style', ''); // clear MathJax inline styles like vertical-align if any
         
-        const widthEx = parseFloat(clone.getAttribute('width'));
-        const heightEx = parseFloat(clone.getAttribute('height'));
-        
-        if (!isNaN(widthEx) && !isNaN(heightEx)) {
-            clone.setAttribute('width', `${widthEx * exToPx}px`);
-            clone.setAttribute('height', `${heightEx * exToPx}px`);
-        } else {
-            // Fallback if MathJax didn't use ex
-            clone.style.fontSize = `${exportSize}px`;
-        }
-
-        // Add standard xmlns if missing
+        // Add namespaces
         clone.setAttribute('xmlns', "http://www.w3.org/2000/svg");
         clone.setAttribute('xmlns:xlink', "http://www.w3.org/1999/xlink");
         
+        // 4. Serialize to string
         const serializer = new XMLSerializer();
         let svgString = serializer.serializeToString(clone);
         
+        // 5. Replace currentColor with the exact exportColor string
+        svgString = svgString.replace(/currentColor/g, exportColor);
+        
+        // 6. Return with standard XML declaration
         return '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>\n' + svgString;
     }
 
