@@ -238,15 +238,38 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function handleDownloadPdf(container) {
-        createSvgCanvas(container, (canvas) => {
-            const imgData = canvas.toDataURL("image/png");
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF('l', 'mm', [canvas.width * 0.264583, canvas.height * 0.264583]);
-            
-            pdf.addImage(imgData, 'PNG', 0, 0, canvas.width * 0.264583, canvas.height * 0.264583);
+    async function handleDownloadPdf(container) {
+        const svgString = getSvgString(container);
+        if (!svgString) return;
+
+        // Create a temporary element to hold the SVG so we can parse its dimensions
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = svgString;
+        const svgElement = tempDiv.querySelector('svg');
+        
+        const width = parseFloat(svgElement.getAttribute('width'));
+        const height = parseFloat(svgElement.getAttribute('height'));
+
+        const { jsPDF } = window.jspdf;
+        const padding = 20;
+        const pdfWidth = width + padding * 2;
+        const pdfHeight = height + padding * 2;
+
+        // Use pt for exact 1:1 mapping with the SVG pixel coordinates
+        const pdf = new jsPDF('l', 'pt', [pdfWidth, pdfHeight]);
+        
+        try {
+            await pdf.svg(svgElement, {
+                x: padding,
+                y: padding,
+                width: width,
+                height: height
+            });
             pdf.save('formula.pdf');
-        });
+        } catch (err) {
+            console.error('Error generating PDF:', err);
+            alert('Failed to generate vector PDF.');
+        }
     }
 
     function triggerDownload(url, filename) {
