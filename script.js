@@ -140,15 +140,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const rect = tempSvg.getBoundingClientRect();
         document.body.removeChild(tempDiv);
 
-        // 2. Set precise width and height in px (with 3 decimal places)
-        clone.setAttribute('width', `${rect.width.toFixed(3)}px`);
-        clone.setAttribute('height', `${rect.height.toFixed(3)}px`);
+        // 2. Set precise width and height without px suffix to avoid parser NaN issues
+        clone.setAttribute('width', `${rect.width.toFixed(3)}`);
+        clone.setAttribute('height', `${rect.height.toFixed(3)}`);
         
         // 3. Clean up the style and attributes to match a standard standalone SVG
         clone.removeAttribute('focusable');
         clone.removeAttribute('role');
         clone.removeAttribute('aria-hidden');
-        clone.setAttribute('style', ''); // clear MathJax inline styles like vertical-align if any
+        clone.removeAttribute('style'); // clear MathJax inline styles instead of setting to empty string
         
         // Emulate the requested semantic structure by adding data-latex to the math node
         const mathG = clone.querySelector('g[data-mml-node="math"]');
@@ -170,7 +170,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // 5. Replace currentColor with the exact exportColor string
         svgString = svgString.replace(/currentColor/g, exportColor);
         
-        // 6. Return with standard XML declaration
+        // 6. Fix for svg2pdf: empty path data d="" causes NaN / hpf errors
+        svgString = svgString.replace(/d=""/g, 'd="M 0 0"');
+        
+        // 7. Return with standard XML declaration
         return '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>\n' + svgString;
     }
 
