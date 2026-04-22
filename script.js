@@ -244,7 +244,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Create a temporary element to hold the SVG so we can parse its dimensions
         const tempDiv = document.createElement('div');
+        // Hide it so it doesn't flash on screen
+        tempDiv.style.position = 'absolute';
+        tempDiv.style.left = '-9999px';
         tempDiv.innerHTML = svgString;
+        document.body.appendChild(tempDiv);
+        
         const svgElement = tempDiv.querySelector('svg');
         
         const width = parseFloat(svgElement.getAttribute('width'));
@@ -268,7 +273,9 @@ document.addEventListener('DOMContentLoaded', () => {
             pdf.save('formula.pdf');
         } catch (err) {
             console.error('Error generating PDF:', err);
-            alert('Failed to generate vector PDF.');
+            alert('Failed to generate vector PDF: ' + err.message);
+        } finally {
+            document.body.removeChild(tempDiv);
         }
     }
 
