@@ -186,13 +186,33 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!svgString) return;
 
         try {
-            await navigator.clipboard.writeText(svgString);
+            // Try to write both text format (for Illustrator) and image format (for PPT/Word)
+            if (window.ClipboardItem) {
+                const textBlob = new Blob([svgString], { type: 'text/plain' });
+                const svgBlob = new Blob([svgString], { type: 'image/svg+xml' });
+                const item = new ClipboardItem({
+                    'text/plain': textBlob,
+                    'image/svg+xml': svgBlob
+                });
+                await navigator.clipboard.write([item]);
+            } else {
+                await navigator.clipboard.writeText(svgString);
+            }
+            
             const originalIcon = btn.innerHTML;
             btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="green" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
             setTimeout(() => { btn.innerHTML = originalIcon; }, 2000);
         } catch (err) {
-            console.error('Failed to copy', err);
-            alert('Failed to copy SVG to clipboard.');
+            console.error('Failed to copy as image, falling back to text only', err);
+            try {
+                // Fallback for browsers that block image/svg+xml (like some versions of Firefox)
+                await navigator.clipboard.writeText(svgString);
+                const originalIcon = btn.innerHTML;
+                btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="green" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                setTimeout(() => { btn.innerHTML = originalIcon; }, 2000);
+            } catch (fallbackErr) {
+                alert('Failed to copy SVG to clipboard.');
+            }
         }
     }
 
