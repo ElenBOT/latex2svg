@@ -6,14 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const exportSizeInput = document.getElementById('export-size');
     const exportColorInput = document.getElementById('export-color');
     const exportBgColorInput = document.getElementById('export-bg-color');
-    const exportBgOpacityInput = document.getElementById('export-bg-opacity');
-    const exportBgOpacityLabel = document.getElementById('export-bg-opacity-label');
     const exportBgTransparentBtn = document.getElementById('export-bg-transparent-btn');
-
-    // Sync opacity label
-    exportBgOpacityInput.addEventListener('input', () => {
-        exportBgOpacityLabel.textContent = exportBgOpacityInput.value + '%';
-    });
 
     // Background: transparent toggle
     let bgTransparent = true;
@@ -21,7 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
         bgTransparent = !bgTransparent;
         exportBgTransparentBtn.classList.toggle('active', bgTransparent);
         exportBgColorInput.disabled = bgTransparent;
-        exportBgOpacityInput.disabled = bgTransparent;
     });
 
     // Default equations
@@ -214,9 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 5b. Apply background color if not transparent
         // Use viewBox coords so the rect covers negative-Y regions that MathJax uses
         if (!bgTransparent) {
-            const hex = exportBgColorInput.value;
-            const opacity = parseInt(exportBgOpacityInput.value) / 100;
-            const bg = hexToRgba(hex, opacity);
+            const bg = exportBgColorInput.value;
             const vbMatch = clone.getAttribute('viewBox');
             let rectAttrs;
             if (vbMatch) {
@@ -236,13 +226,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // 7. Return with standard XML declaration
         return '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>\n' + svgString;
-    }
-
-    function hexToRgba(hex, opacity) {
-        const r = parseInt(hex.slice(1, 3), 16);
-        const g = parseInt(hex.slice(3, 5), 16);
-        const b = parseInt(hex.slice(5, 7), 16);
-        return `rgba(${r},${g},${b},${opacity})`;
     }
 
     async function handleCopySvg(container, btn) {
@@ -315,11 +298,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            canvas.width = svgWidth;
-            canvas.height = svgHeight;
+            const scale = 2; // 2x per axis = 4x pixel density
+            canvas.width = svgWidth * scale;
+            canvas.height = svgHeight * scale;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0, svgWidth, svgHeight);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             URL.revokeObjectURL(url);
             
             callback(canvas);

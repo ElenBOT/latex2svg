@@ -102,22 +102,6 @@ input[type="color"]:disabled {
     cursor: not-allowed;
 }
 
-input[type="range"] {
-    width: 70px;
-    cursor: pointer;
-    accent-color: var(--primary-color);
-}
-
-input[type="range"]:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-}
-
-#export-bg-opacity-label {
-    font-size: 0.8rem;
-    color: #374151;
-    min-width: 32px;
-}
 
 .transparent-toggle {
     padding: 3px 8px;
